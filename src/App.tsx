@@ -17,34 +17,46 @@ function App() {
   const [midiData, setMidiData] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  const validateJSONResponse = (response: string) => {
+    try {
+      const parsed = JSON.parse(response);
+      if (!Array.isArray(parsed)) {
+        throw new Error('Response is not an array');
+      }
+      
+      // Validate array structure
+      const isValid = parsed.every(item => 
+        Array.isArray(item) && 
+        item.length === 3 && 
+        typeof item[0] === 'string' && 
+        typeof item[1] === 'number' && 
+        typeof item[2] === 'number'
+      );
+
+      if (!isValid) {
+        throw new Error('Invalid array structure');
+      }
+
+      return parsed;
+    } catch (error) {
+      throw new Error(`Invalid JSON format: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
 
-    console.log('Submitting user input:', input);
-
-    // Add user message
     const userMessage = { text: input, isUser: true }
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setIsLoading(true)
 
     try {
-      console.log('Calling LLM service...');
       const response = await callLLM(input)
-      console.log('LLM Response received:', response);
-
-      // Validate that the response is a valid JSON array
-      try {
-        const parsedResponse = JSON.parse(response);
-        if (!Array.isArray(parsedResponse)) {
-          throw new Error('Response is not an array');
-        }
-        console.log('Valid JSON array received:', parsedResponse);
-      } catch (parseError) {
-        console.error('Invalid JSON response:', parseError);
-        throw new Error('Invalid response format from LLM');
-      }
+      
+      // Validate JSON response
+      validateJSONResponse(response);
 
       const botMessage = {
         text: response,
@@ -55,7 +67,7 @@ function App() {
       // Mock MIDI data (replace with actual MIDI generation)
       setMidiData('data:audio/midi;base64,YOUR_MIDI_DATA_HERE')
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
+      console.error('Error:', error);
       const errorMessage = {
         text: error instanceof Error 
           ? `Error: ${error.message}`

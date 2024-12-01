@@ -1,4 +1,5 @@
 import { User, Bot, AlertCircle } from 'lucide-react'
+import { JSONDisplay } from './JSONDisplay'
 
 interface ChatMessageProps {
   message: string
@@ -7,6 +8,28 @@ interface ChatMessageProps {
 }
 
 export const ChatMessage = ({ message, isUser, error }: ChatMessageProps) => {
+  const tryParseJSON = () => {
+    try {
+      if (!isUser) {
+        const parsed = JSON.parse(message);
+        if (Array.isArray(parsed) && parsed.every(item => 
+          Array.isArray(item) && 
+          item.length === 3 && 
+          typeof item[0] === 'string' && 
+          typeof item[1] === 'number' && 
+          typeof item[2] === 'number'
+        )) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.log('Not a valid JSON array:', e);
+    }
+    return null;
+  };
+
+  const parsedJSON = tryParseJSON();
+
   return (
     <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
       <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
@@ -21,7 +44,11 @@ export const ChatMessage = ({ message, isUser, error }: ChatMessageProps) => {
               : 'bg-gray-700'
         }`}
       >
-        <p className="text-white">{message}</p>
+        {parsedJSON ? (
+          <JSONDisplay data={parsedJSON} />
+        ) : (
+          <p className="text-white">{message}</p>
+        )}
       </div>
     </div>
   )
