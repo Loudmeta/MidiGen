@@ -1,8 +1,8 @@
-
 import { useState } from 'react'
 import { Send } from 'lucide-react'
 import { ChatMessage } from './components/ChatMessage'
 import { MidiPlayerComponent } from './components/MidiPlayer'
+import { callLLM } from './services/llmService'
 import './index.css'
 
 interface Message {
@@ -14,28 +14,37 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [midiData, setMidiData] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim()) return
+    if (!input.trim() || isLoading) return
 
     // Add user message
     const userMessage = { text: input, isUser: true }
     setMessages(prev => [...prev, userMessage])
     setInput('')
+    setIsLoading(true)
 
-    // TODO: Replace this with actual LLM API call
-    // This is a mock response
-    setTimeout(() => {
+    try {
+      const response = await callLLM(input)
       const botMessage = {
-        text: "I've generated a MIDI file based on your prompt.",
+        text: response,
         isUser: false
       }
       setMessages(prev => [...prev, botMessage])
       
       // Mock MIDI data (replace with actual MIDI generation)
       setMidiData('data:audio/midi;base64,YOUR_MIDI_DATA_HERE')
-    }, 1000)
+    } catch (error) {
+      const errorMessage = {
+        text: "Sorry, I encountered an error while processing your request.",
+        isUser: false
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -62,10 +71,14 @@ function App() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Describe the music you want to generate..."
             className="flex-1 bg-gray-800 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+            disabled={isLoading}
           />
           <button
             type="submit"
-            className="bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-2 transition-colors"
+            className={`bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-2 transition-colors ${
+              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={isLoading}
           >
             <Send size={20} />
           </button>
@@ -76,4 +89,3 @@ function App() {
 }
 
 export default App
-      
