@@ -3,13 +3,9 @@ import { Send, Loader } from 'lucide-react'
 import { ChatMessage } from './components/ChatMessage'
 import { MidiPlayerComponent } from './components/MidiPlayer'
 import { callLLM } from './services/llmService'
+import { validateJSONResponse } from './utils/jsonValidation'
+import { Message, ValidationError } from './types'
 import './index.css'
-
-interface Message {
-  text: string
-  isUser: boolean
-  error?: boolean
-}
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([])
@@ -17,61 +13,33 @@ function App() {
   const [midiData, setMidiData] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const validateJSONResponse = (response: string) => {
-    try {
-      const parsed = JSON.parse(response);
-      if (!Array.isArray(parsed)) {
-        throw new Error('Response is not an array');
-      }
-      
-      // Validate array structure
-      const isValid = parsed.every(item => 
-        Array.isArray(item) && 
-        item.length === 3 && 
-        typeof item[0] === 'string' && 
-        typeof item[1] === 'number' && 
-        typeof item[2] === 'number'
-      );
-
-      if (!isValid) {
-        throw new Error('Invalid array structure');
-      }
-
-      return parsed;
-    } catch (error) {
-      throw new Error(`Invalid JSON format: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
 
-    const userMessage = { text: input, isUser: true }
+    const userMessage: Message = { text: input, isUser: true }
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setIsLoading(true)
 
     try {
       const response = await callLLM(input)
-      
-      // Validate JSON response
-      validateJSONResponse(response);
+      const parsedJSON = validateJSONResponse(response)
 
-      const botMessage = {
+      const botMessage: Message = {
         text: response,
-        isUser: false
+        isUser: false,
+        parsedJSON
       }
       setMessages(prev => [...prev, botMessage])
       
       // Mock MIDI data (replace with actual MIDI generation)
       setMidiData('data:audio/midi;base64,YOUR_MIDI_DATA_HERE')
     } catch (error) {
-      console.error('Error:', error);
-      const errorMessage = {
-        text: error instanceof Error 
-          ? `Error: ${error.message}`
-          : "Sorry, I encountered an error while processing your request.",
+      console.error('Error:', error)
+      const errorMessage: Message = {
+        text: (error as ValidationError).details || 
+          (error instanceof Error ? error.message : 'An unexpected error occurred'),
         isUser: false,
         error: true
       }
@@ -90,9 +58,7 @@ function App() {
           {messages.map((message, index) => (
             <ChatMessage 
               key={index} 
-              message={message.text} 
-              isUser={message.isUser} 
-              error={message.error}
+              message={message}
             />
           ))}
           {isLoading && (
