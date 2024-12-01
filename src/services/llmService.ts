@@ -16,30 +16,66 @@ export const callLLM = async (prompt: string): Promise<string> => {
   const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
   const SITE_NAME = import.meta.env.VITE_SITE_NAME || 'MidiGen';
 
-  console.log('Making LLM API call with prompt:', prompt);
-  console.log('Using API key:', OPENROUTER_API_KEY ? 'Present' : 'Missing');
-
   if (!OPENROUTER_API_KEY) {
     throw new Error('OpenRouter API key is missing');
   }
 
-  const systemPrompt = `Generate a melody with 15 to 40 notes where each note is represented with one of the symbols
-A, A#, B, C, C#, D, D#, E, F, F#, G, G#, an octave between 0 and 9, and a duration in milliseconds for which it should be played.
+  const systemPrompt = `You are a musical melody generator. Generate melodies following these strict musical rules:
 
-Format your response in markdown with the following structure:
+Musical Structure Rules:
+1. Generate exactly 8 bars of music
+2. Musical timing: 
+   - 2 beats = 1 second (1000ms)
+   - 4 beats = 1 bar (2000ms)
+   - Total composition length = 8 bars (8000ms)
+
+3. Generate three parallel musical lines:
+   - Melody line: in octave 6 (main tune)
+   - Chord progression: in octave 5 (harmonic support)
+   - Bass line: in octave 4 (rhythmic foundation)
+
+Note Requirements:
+- Each note must be represented as a triple containing:
+  - Note symbol (only use: A, A#, B, C, C#, D, D#, E, F, F#, G, G#)
+  - Octave (must be exactly 4, 5, or 6 depending on the musical line)
+  - Duration in milliseconds (based on musical timing rules)
+  - Velocity (integer between 0-100, controlling note intensity)
+
+The output must be formatted in markdown as follows:
 
 ### Generated Melody
-[Brief description of the generated melody]
+[Write a brief description of the melody, including its style, mood, and how the three lines interact IN A SINGLE SENTENCE]
 
 \`\`\`json
-[The JSON array of note triples]
+{
+  "melodyLine": [
+    ["note", 6, duration, velocity],
+    ...
+  ],
+  "chordProgression": [
+    ["note", 5, duration, velocity],
+    ...
+  ],
+  "bassLine": [
+    ["note", 4, duration, velocity],
+    ...
+  ]
+}
 \`\`\`
+
+Important rules:
+- Each note must be one of: A, A#, B, C, C#, D, D#, E, F, F#, G, G#
+- Octaves must be exactly: 6 for melody, 5 for chords, 4 for bass
+- Durations must follow the musical timing (in milliseconds)
+- Velocity must be between 0-100
+- Total duration of each line must equal 8000ms (8 bars)
+- Ensure the JSON is valid and properly formatted
 
 The melody should be about:`;
 
   try {
     const requestBody = {
-      "model": "qwen/qwq-32b-preview",
+      "model": "meta-llama/llama-3.2-90b-vision-instruct:free",
       "messages": [
         {
           "role": "system",
@@ -49,10 +85,10 @@ The melody should be about:`;
           "role": "user",
           "content": prompt
         }
-      ]
+      ],
+      "temperature": 0.7,
+      "max_tokens": 1000
     };
-
-    console.log('Request body:', requestBody);
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -64,8 +100,6 @@ The melody should be about:`;
       },
       body: JSON.stringify(requestBody)
     });
-
-    console.log('Response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();

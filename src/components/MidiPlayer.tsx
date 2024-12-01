@@ -1,21 +1,25 @@
-
 import { Play, Pause, Download } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import MidiPlayer from 'midi-player-js'
+import { createMidiFile, parseLLMResponse } from '../services/midiService'
 
 interface MidiPlayerProps {
-  midiData: string | null
+  midiData: string;
 }
 
-export const MidiPlayerComponent = ({ midiData }: MidiPlayerProps) => {
+export const MidiPlayerComponent: React.FC<MidiPlayerProps> = ({ midiData }) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [player, setPlayer] = useState<MidiPlayer.Player | null>(null)
 
   useEffect(() => {
     if (midiData) {
-      const newPlayer = new MidiPlayer.Player()
-      newPlayer.loadDataUri(midiData)
-      setPlayer(newPlayer)
+      try {
+        const newPlayer = new MidiPlayer.Player()
+        newPlayer.loadDataUri(midiData)
+        setPlayer(newPlayer)
+      } catch (error) {
+        console.error('Error processing LLM response:', error)
+      }
     }
   }, [midiData])
 
@@ -42,7 +46,7 @@ export const MidiPlayerComponent = ({ midiData }: MidiPlayerProps) => {
   if (!midiData) return null
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg">
+    <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-4 border border-gray-700/50">
       <div className="flex items-center gap-4">
         <button
           onClick={togglePlay}
@@ -56,6 +60,9 @@ export const MidiPlayerComponent = ({ midiData }: MidiPlayerProps) => {
         >
           <Download size={24} />
         </button>
+      </div>
+      <div className="text-sm text-gray-400">
+        MIDI Player Controls (Coming Soon)
       </div>
     </div>
   )

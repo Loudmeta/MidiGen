@@ -11,3 +11,11 @@ export interface ValidationError {
   message: string;
   details: string;
 }
+
+export interface LLMResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+}
