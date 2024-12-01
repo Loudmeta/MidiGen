@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "lucide-react": "^0.453.0",
+    "midi-player-js": "^2.0.16",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-use": "^17.5.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.6",
