@@ -1,12 +1,13 @@
 import { User, Bot } from 'lucide-react'
 import { Message } from '../types'
+import { JSONDisplay } from './JSONDisplay'
 
 interface ChatMessageProps {
   message: Message
 }
 
 export const ChatMessage = ({ message }: ChatMessageProps) => {
-  const { isUser, text } = message
+  const { isUser, text, noteSequence } = message
 
   return (
     <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
@@ -19,6 +20,9 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
         }`}
       >
         <p className="text-white whitespace-pre-wrap">{text}</p>
+        {noteSequence && <div className="mt-4">
+          <JSONDisplay data={noteSequence} />
+        </div>}
       </div>
     </div>
   )

@@ -3,7 +3,8 @@ import { Send, Loader } from 'lucide-react'
 import { ChatMessage } from './components/ChatMessage'
 import { MidiPlayerComponent } from './components/MidiPlayer'
 import { callLLM } from './services/llmService'
-import { Message } from './types'
+import { Message, NoteSequence } from './types'
+import { validateJSONResponse } from './utils/jsonValidation'
 import './index.css'
 
 function App() {
@@ -23,16 +24,32 @@ function App() {
 
     try {
       const response = await callLLM(input)
+      
+      let noteSequence: NoteSequence | undefined
+      try {
+        noteSequence = validateJSONResponse(response)
+      } catch (validationError) {
+        console.error('Validation error:', validationError)
+      }
+
       const botMessage: Message = {
         text: response,
-        isUser: false
+        isUser: false,
+        noteSequence
       }
       setMessages(prev => [...prev, botMessage])
       
       // Mock MIDI data (replace with actual MIDI generation)
-      setMidiData('data:audio/midi;base64,YOUR_MIDI_DATA_HERE')
+      if (noteSequence) {
+        setMidiData('data:audio/midi;base64,YOUR_MIDI_DATA_HERE')
+      }
     } catch (error) {
       console.error('Error:', error)
+      const errorMessage: Message = {
+        text: 'Sorry, there was an error processing your request. Please try again.',
+        isUser: false
+      }
+      setMessages(prev => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
     }
