@@ -1,5 +1,5 @@
 interface Message {
-  role: 'user' | 'assistant';
+  role: 'system' | 'user' | 'assistant';
   content: string;
 }
 
@@ -16,6 +16,14 @@ export const callLLM = async (prompt: string): Promise<string> => {
   const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
   const SITE_NAME = import.meta.env.VITE_SITE_NAME || 'MidiGen';
 
+  const systemPrompt = `Generate a melody with 15 to 40 notes where each note is represented with one of the symbols
+A, A#, B, C, C#, D, D#, E, F, F#, G, G#, an octave between 0 and 9, and a duration in milliseconds for which it should be played.
+
+Output the result as a JSON array of triples where the first element of the triple is the note, the second is the octave, and the third is the duration in milliseconds.
+In your response return only the JSON array without any additional strings before and after.
+
+The melody should be about:`;
+
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -28,6 +36,10 @@ export const callLLM = async (prompt: string): Promise<string> => {
       body: JSON.stringify({
         "model": "qwen/qwq-32b-preview",
         "messages": [
+          {
+            "role": "system",
+            "content": systemPrompt
+          },
           {
             "role": "user",
             "content": prompt
