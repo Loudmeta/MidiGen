@@ -3,8 +3,7 @@ import { Send, Loader } from 'lucide-react'
 import { ChatMessage } from './components/ChatMessage'
 import { MidiPlayerComponent } from './components/MidiPlayer'
 import { callLLM } from './services/llmService'
-import { validateJSONResponse } from './utils/jsonValidation'
-import { Message, ValidationError } from './types'
+import { Message } from './types'
 import './index.css'
 
 function App() {
@@ -24,12 +23,9 @@ function App() {
 
     try {
       const response = await callLLM(input)
-      const parsedJSON = validateJSONResponse(response)
-
       const botMessage: Message = {
         text: response,
-        isUser: false,
-        parsedJSON
+        isUser: false
       }
       setMessages(prev => [...prev, botMessage])
       
@@ -37,13 +33,6 @@ function App() {
       setMidiData('data:audio/midi;base64,YOUR_MIDI_DATA_HERE')
     } catch (error) {
       console.error('Error:', error)
-      const errorMessage: Message = {
-        text: (error as ValidationError).details || 
-          (error instanceof Error ? error.message : 'An unexpected error occurred'),
-        isUser: false,
-        error: true
-      }
-      setMessages(prev => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
     }
