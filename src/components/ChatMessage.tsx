@@ -1,6 +1,8 @@
 import { User, Bot } from 'lucide-react'
 import { Message } from '../types'
 import { JSONDisplay } from './JSONDisplay'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface ChatMessageProps {
   message: Message
@@ -19,7 +21,14 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
           isUser ? 'bg-blue-600' : 'bg-gray-700'
         }`}
       >
-        <p className="text-white whitespace-pre-wrap">{text}</p>
+        <div className="prose prose-invert max-w-none">
+          <ReactMarkdown 
+            remarkPlugins={[remarkGfm]}
+            className="text-white whitespace-pre-wrap"
+          >
+            {text}
+          </ReactMarkdown>
+        </div>
         {noteSequence && <div className="mt-4">
           <JSONDisplay data={noteSequence} />
         </div>}

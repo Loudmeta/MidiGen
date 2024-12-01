@@ -26,8 +26,14 @@ export const callLLM = async (prompt: string): Promise<string> => {
   const systemPrompt = `Generate a melody with 15 to 40 notes where each note is represented with one of the symbols
 A, A#, B, C, C#, D, D#, E, F, F#, G, G#, an octave between 0 and 9, and a duration in milliseconds for which it should be played.
 
-Output the result as a JSON array of triples where the first element of the triple is the note, the second is the octave, and the third is the duration in milliseconds.
-In your response return only the JSON array without any additional strings before and after.
+Format your response in markdown with the following structure:
+
+### Generated Melody
+[Brief description of the generated melody]
+
+\`\`\`json
+[The JSON array of note triples]
+\`\`\`
 
 The melody should be about:`;
 
