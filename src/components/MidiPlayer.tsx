@@ -13,7 +13,7 @@ export const MidiPlayerComponent = ({ midiData }: MidiPlayerComponentProps) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [zoomLevel, setZoomLevel] = useState(0)
+  const [zoomLevel, setZoomLevel] = useState(100) // Start at 100% zoom
   const playerRef = useRef<any>(null)
   const noteSequence = useMemo(() => parseMidiToNoteSequence(midiData), [midiData])
 
@@ -84,8 +84,8 @@ export const MidiPlayerComponent = ({ midiData }: MidiPlayerComponentProps) => {
             <Search size={16} />
             <input
               type="range"
-              min="0"
-              max="100"
+              min="50"
+              max="200"
               value={zoomLevel}
               onChange={(e) => setZoomLevel(parseInt(e.target.value))}
               className="

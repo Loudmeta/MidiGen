@@ -1,187 +1,203 @@
-import { useEffect, useRef, useState } from 'react'
-import { NoteSequence } from '../types'
+import React, { useEffect, useRef, useMemo } from 'react'
 
 interface PianoRollProps {
-  noteSequence?: NoteSequence
-  currentTime?: number
-  duration?: number
-  zoomLevel?: number
+  noteSequence: any[]
+  currentTime: number
+  duration: number
+  zoomLevel: number
 }
 
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-const PIANO_WIDTH = 100
+const PIANO_WIDTH = 80
 const NOTE_HEIGHT = 20
-const BEAT_WIDTH = 60  // Width per beat at default zoom
+const PIXELS_PER_BEAT = 60
 const BEATS_PER_BAR = 4
-const TOTAL_BARS = 8
-const GRID_COLOR = '#2a2a2a'
-const BAR_LINE_COLOR = '#3a3a3a'
-const NOTE_COLOR = '#4CAF50'
+const MIN_BARS = 8
+const MAX_BARS = 20
 const TOTAL_OCTAVES = 3 // 4 to 6
-const NOTES_PER_OCTAVE = NOTES.length
-const TOTAL_NOTES = TOTAL_OCTAVES * NOTES_PER_OCTAVE
+const TOTAL_KEYS = TOTAL_OCTAVES * 12
 
-export const PianoRoll = ({ 
+export const PianoRoll: React.FC<PianoRollProps> = ({ 
   noteSequence, 
-  currentTime = 0, 
-  duration = 0,
-  zoomLevel = 0
-}: PianoRollProps) => {
+  currentTime,
+  duration,
+  zoomLevel 
+}) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const pianoCanvasRef = useRef<HTMLCanvasElement>(null)
   const gridCanvasRef = useRef<HTMLCanvasElement>(null)
-  const [pianoCtx, setPianoCtx] = useState<CanvasRenderingContext2D | null>(null)
-  const [gridCtx, setGridCtx] = useState<CanvasRenderingContext2D | null>(null)
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
 
-  // Calculate zoom factor (1 at 0%, 4 at 100%)
-  const zoomFactor = 1 + (zoomLevel / 100) * 3
+  // Calculate required number of bars based on note sequence
+  const requiredBars = useMemo(() => {
+    if (!noteSequence || noteSequence.length === 0) return MIN_BARS
 
-  // Calculate dimensions
-  const totalBeats = BEATS_PER_BAR * TOTAL_BARS
-  const baseGridWidth = BEAT_WIDTH * totalBeats
-  const gridWidth = baseGridWidth * zoomFactor
-  const totalWidth = PIANO_WIDTH + gridWidth
-  const totalHeight = NOTE_HEIGHT * TOTAL_NOTES
+    // Find the last note's end time in beats
+    const lastNoteEnd = Math.max(...noteSequence.map(note => note.startTime + note.duration))
+    
+    // Convert beats to bars (4 beats per bar)
+    const barsNeeded = Math.ceil(lastNoteEnd / BEATS_PER_BAR)
+    
+    // Clamp between MIN_BARS and MAX_BARS
+    return Math.max(MIN_BARS, Math.min(MAX_BARS, barsNeeded))
+  }, [noteSequence])
 
+  // Debug logging
   useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect()
-        setDimensions({ width, height })
-      }
-    }
-
-    updateDimensions()
-    window.addEventListener('resize', updateDimensions)
-    return () => window.removeEventListener('resize', updateDimensions)
-  }, [])
-
-  useEffect(() => {
-    // Initialize piano canvas
-    const pianoCanvas = pianoCanvasRef.current
-    if (pianoCanvas) {
-      const context = pianoCanvas.getContext('2d')
-      if (context) {
-        const dpr = window.devicePixelRatio || 1
-        pianoCanvas.width = PIANO_WIDTH * dpr
-        pianoCanvas.height = totalHeight * dpr
-        context.scale(dpr, dpr)
-        pianoCanvas.style.width = `${PIANO_WIDTH}px`
-        pianoCanvas.style.height = `${totalHeight}px`
-        setPianoCtx(context)
-      }
-    }
-
-    // Initialize grid canvas
-    const gridCanvas = gridCanvasRef.current
-    if (gridCanvas) {
-      const context = gridCanvas.getContext('2d')
-      if (context) {
-        const dpr = window.devicePixelRatio || 1
-        gridCanvas.width = gridWidth * dpr
-        gridCanvas.height = totalHeight * dpr
-        context.scale(dpr, dpr)
-        gridCanvas.style.width = `${gridWidth}px`
-        gridCanvas.style.height = `${totalHeight}px`
-        setGridCtx(context)
-      }
-    }
-  }, [totalHeight, gridWidth])
-
-  useEffect(() => {
-    // Draw piano keys
-    if (pianoCtx) {
-      pianoCtx.clearRect(0, 0, PIANO_WIDTH, totalHeight)
-      drawPianoKeys(pianoCtx)
-    }
-
-    // Draw grid and notes
-    if (gridCtx) {
-      gridCtx.clearRect(0, 0, gridWidth, totalHeight)
-      drawGrid(gridCtx)
-      
-      if (duration > 0) {
-        const playbackX = (currentTime / duration) * gridWidth
-        gridCtx.beginPath()
-        gridCtx.strokeStyle = '#ffffff'
-        gridCtx.lineWidth = 2
-        gridCtx.moveTo(playbackX, 0)
-        gridCtx.lineTo(playbackX, totalHeight)
-        gridCtx.stroke()
-      }
-
-      if (noteSequence) {
-        drawNotes(gridCtx, noteSequence)
-      }
-    }
-  }, [pianoCtx, gridCtx, noteSequence, currentTime, duration, totalHeight, gridWidth, zoomLevel])
-
-  const drawPianoKeys = (ctx: CanvasRenderingContext2D) => {
-    // Draw from octave 4 to 6 (inclusive)
-    for (let octave = 6; octave >= 4; octave--) {
-      NOTES.forEach((note, index) => {
-        const y = (NOTES.length * (6 - octave) + index) * NOTE_HEIGHT
-        const isBlackKey = note.includes('#')
-
-        // Draw key background
-        ctx.fillStyle = isBlackKey ? '#1a1a1a' : '#ffffff'
-        ctx.fillRect(0, y, PIANO_WIDTH - 1, NOTE_HEIGHT - 1)
-
-        // Draw key label
-        ctx.fillStyle = isBlackKey ? '#ffffff' : '#1a1a1a'
-        ctx.font = '12px Arial'
-        ctx.fillText(`${note}${octave}`, 5, y + 14)
+    if (noteSequence && noteSequence.length > 0) {
+      const lastNote = noteSequence[noteSequence.length - 1]
+      console.log('MIDI Length Info:', {
+        totalNotes: noteSequence.length,
+        lastNoteStart: lastNote.startTime,
+        lastNoteDuration: lastNote.duration,
+        requiredBars,
+        totalBeats: requiredBars * BEATS_PER_BAR
       })
     }
-  }
+  }, [noteSequence, requiredBars])
 
-  const drawGrid = (ctx: CanvasRenderingContext2D) => {
-    // Draw horizontal grid lines
-    for (let i = 0; i <= TOTAL_NOTES; i++) {
-      const y = i * NOTE_HEIGHT
-      ctx.beginPath()
-      ctx.strokeStyle = GRID_COLOR
-      ctx.moveTo(0, y)
-      ctx.lineTo(gridWidth, y)
-      ctx.stroke()
-    }
+  // Calculate dimensions
+  const baseGridWidth = PIXELS_PER_BEAT * BEATS_PER_BAR * requiredBars
+  const gridWidth = baseGridWidth * (zoomLevel / 100)
+  const totalHeight = NOTE_HEIGHT * TOTAL_KEYS
+  const totalWidth = PIANO_WIDTH + gridWidth
 
-    // Draw vertical grid lines and bar lines
-    const beatWidth = gridWidth / totalBeats
+  useEffect(() => {
+    if (!gridCanvasRef.current) return
+    const ctx = gridCanvasRef.current.getContext('2d')
+    if (!ctx) return
+
+    const dpr = window.devicePixelRatio || 1
+    gridCanvasRef.current.width = gridWidth * dpr
+    gridCanvasRef.current.height = totalHeight * dpr
+    ctx.scale(dpr, dpr)
+    ctx.clearRect(0, 0, gridWidth, totalHeight)
+
+    // Draw vertical grid lines (beats)
+    const totalBeats = BEATS_PER_BAR * requiredBars
+    const pixelsPerBeat = gridWidth / totalBeats
+
+    // Draw beat lines
     for (let i = 0; i <= totalBeats; i++) {
-      const x = i * beatWidth
+      const x = i * pixelsPerBeat
       ctx.beginPath()
-      ctx.strokeStyle = i % BEATS_PER_BAR === 0 ? BAR_LINE_COLOR : GRID_COLOR
-      ctx.lineWidth = i % BEATS_PER_BAR === 0 ? 2 : 1
       ctx.moveTo(x, 0)
       ctx.lineTo(x, totalHeight)
+      
+      if (i % BEATS_PER_BAR === 0) {
+        // Bar lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
+        ctx.lineWidth = 1
+        ctx.stroke()
+        
+        // Add bar numbers
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+        ctx.font = '10px Arial'
+        ctx.fillText(`${i/BEATS_PER_BAR + 1}`, x + 2, 10)
+      } else {
+        // Beat lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
+        ctx.lineWidth = 0.5
+        ctx.stroke()
+      }
+    }
+
+    // Draw horizontal grid lines
+    for (let i = 0; i <= TOTAL_KEYS; i++) {
+      const y = i * NOTE_HEIGHT
+      ctx.beginPath()
+      ctx.moveTo(0, y)
+      ctx.lineTo(gridWidth, y)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
+      ctx.lineWidth = 0.5
       ctx.stroke()
     }
-  }
 
-  const drawNotes = (ctx: CanvasRenderingContext2D, noteSequence: NoteSequence) => {
-    const beatWidth = gridWidth / totalBeats
+    // Draw notes
+    if (noteSequence && noteSequence.length > 0) {
+      ctx.fillStyle = 'rgba(0, 120, 255, 0.6)'
+      
+      noteSequence.forEach((note, index) => {
+        // Validate note data
+        if (!note.note || !note.octave || typeof note.startTime !== 'number' || typeof note.duration !== 'number') {
+          console.warn('Invalid note data:', note)
+          return
+        }
+
+        // Calculate vertical position
+        const octaveOffset = (note.octave - 4) * 12
+        const noteIndex = NOTES.indexOf(note.note)
+        if (noteIndex === -1) {
+          console.warn('Invalid note name:', note.note)
+          return
+        }
+
+        const y = (TOTAL_KEYS - 1 - (noteIndex + octaveOffset)) * NOTE_HEIGHT
+
+        // Calculate horizontal position based on beats
+        const x = note.startTime * pixelsPerBeat
+        const width = Math.max(note.duration * pixelsPerBeat, 2)
+
+        // Draw note rectangle with border
+        ctx.fillRect(x, y, width, NOTE_HEIGHT)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
+        ctx.lineWidth = 1
+        ctx.strokeRect(x, y, width, NOTE_HEIGHT)
+      })
+    }
+
+  }, [noteSequence, zoomLevel, gridWidth, totalHeight, requiredBars])
+
+  useEffect(() => {
+    if (!pianoCanvasRef.current) return
+    const ctx = pianoCanvasRef.current.getContext('2d')
+    if (!ctx) return
+
+    const dpr = window.devicePixelRatio || 1
+    pianoCanvasRef.current.width = PIANO_WIDTH * dpr
+    pianoCanvasRef.current.height = totalHeight * dpr
+    ctx.scale(dpr, dpr)
+    ctx.clearRect(0, 0, PIANO_WIDTH, totalHeight)
+
+    // Draw piano keys
+    for (let octave = 6; octave >= 4; octave--) {
+      for (let i = 0; i < 12; i++) {
+        const isBlackKey = [1, 3, 6, 8, 10].includes(i)
+        const y = (TOTAL_KEYS - 1 - (i + (octave - 4) * 12)) * NOTE_HEIGHT
+        
+        // Draw key background
+        ctx.fillStyle = isBlackKey ? '#000000' : '#ffffff'
+        ctx.fillRect(0, y, PIANO_WIDTH, NOTE_HEIGHT)
+        
+        // Draw key border
+        ctx.strokeStyle = '#666666'
+        ctx.lineWidth = 1
+        ctx.strokeRect(0, y, PIANO_WIDTH, NOTE_HEIGHT)
+        
+        // Add note labels
+        if (!isBlackKey) {
+          ctx.fillStyle = '#000000'
+          ctx.font = '12px Arial'
+          ctx.fillText(`${NOTES[i]}${octave}`, 5, y + 14)
+        }
+      }
+    }
+  }, [totalHeight])
+
+  // Draw playback position line
+  useEffect(() => {
+    if (!gridCanvasRef.current || !duration) return
+    const ctx = gridCanvasRef.current.getContext('2d')
+    if (!ctx) return
+
+    const x = (currentTime / duration) * gridWidth
     
-    noteSequence.forEach(([note, octave, duration]) => {
-      const noteIndex = NOTES.indexOf(note as string)
-      if (noteIndex === -1 || octave < 4 || octave > 6) return
-
-      // Calculate position
-      const y = (NOTES.length * (6 - octave) + noteIndex) * NOTE_HEIGHT
-      
-      // Calculate x position based on time (assuming 120 BPM, 500ms per beat)
-      const beatsFromStart = duration / 500 // Convert duration to beats
-      const x = beatsFromStart * beatWidth
-      
-      // Calculate width based on note duration
-      const width = beatWidth // One beat width
-
-      // Draw note rectangle
-      ctx.fillStyle = NOTE_COLOR
-      ctx.fillRect(x, y, width, NOTE_HEIGHT - 1)
-    })
-  }
+    ctx.beginPath()
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = 2
+    ctx.moveTo(x, 0)
+    ctx.lineTo(x, totalHeight)
+    ctx.stroke()
+  }, [currentTime, duration, gridWidth, totalHeight])
 
   return (
     <div 
