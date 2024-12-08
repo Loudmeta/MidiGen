@@ -1,6 +1,7 @@
 import { NoteSequence } from '../types'
 
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+const TICKS_PER_BEAT = 480 // Standard MIDI resolution
 
 export const parseMidiToNoteSequence = (midiDataUri: string): NoteSequence => {
   try {
@@ -16,12 +17,17 @@ export const parseMidiToNoteSequence = (midiDataUri: string): NoteSequence => {
     // Parse MIDI file structure
     let position = 0
     const notes: NoteSequence = []
+    let currentTime = 0
     
     // Skip MIDI header
     position += 14
 
     // Parse MIDI track
     while (position < bytes.length) {
+      const deltaTime = readVariableLengthQuantity(bytes, position)
+      position += deltaTime.bytesRead
+      currentTime += deltaTime.value
+
       const eventType = bytes[position]
       position++
 
@@ -35,10 +41,12 @@ export const parseMidiToNoteSequence = (midiDataUri: string): NoteSequence => {
           const noteIndex = noteNumber % 12
           const noteName = NOTES[noteIndex]
           
-          // Calculate duration (assuming 500ms per beat)
-          const duration = 500 // Default to one beat
+          // Convert ticks to milliseconds (assuming 120 BPM)
+          // At 120 BPM, one beat = 500ms
+          // So, ticks * (500 / TICKS_PER_BEAT) = ms
+          const timeInMs = (currentTime * 500) / TICKS_PER_BEAT
 
-          notes.push([noteName, octave, duration])
+          notes.push([noteName, octave, timeInMs])
         }
       } else {
         // Skip other events
@@ -51,4 +59,18 @@ export const parseMidiToNoteSequence = (midiDataUri: string): NoteSequence => {
     console.error('Error parsing MIDI data:', error)
     return []
   }
+}
+
+function readVariableLengthQuantity(bytes: Uint8Array, position: number): { value: number, bytesRead: number } {
+  let value = 0
+  let bytesRead = 0
+  let byte
+
+  do {
+    byte = bytes[position + bytesRead]
+    value = (value << 7) | (byte & 0x7F)
+    bytesRead++
+  } while (byte & 0x80)
+
+  return { value, bytesRead }
 }

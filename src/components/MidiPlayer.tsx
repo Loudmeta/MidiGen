@@ -63,7 +63,7 @@ export const MidiPlayerComponent = ({ midiData }: MidiPlayerComponentProps) => {
 
   return (
     <div className="glass-container p-4 space-y-4">
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <button
             onClick={handlePlayPause}
@@ -113,7 +113,7 @@ export const MidiPlayerComponent = ({ midiData }: MidiPlayerComponentProps) => {
         </div>
       </div>
 
-      <div className="relative h-[400px]">
+      <div className="relative h-[400px] overflow-hidden rounded-lg border border-white/10">
         <PianoRoll
           noteSequence={noteSequence}
           currentTime={currentTime}

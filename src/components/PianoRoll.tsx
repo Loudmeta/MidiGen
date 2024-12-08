@@ -17,6 +17,9 @@ const TOTAL_BARS = 8
 const GRID_COLOR = '#2a2a2a'
 const BAR_LINE_COLOR = '#3a3a3a'
 const NOTE_COLOR = '#4CAF50'
+const TOTAL_OCTAVES = 3 // 4 to 6
+const NOTES_PER_OCTAVE = NOTES.length
+const TOTAL_NOTES = TOTAL_OCTAVES * NOTES_PER_OCTAVE
 
 export const PianoRoll = ({ 
   noteSequence, 
@@ -39,8 +42,7 @@ export const PianoRoll = ({
   const baseGridWidth = BEAT_WIDTH * totalBeats
   const gridWidth = baseGridWidth * zoomFactor
   const totalWidth = PIANO_WIDTH + gridWidth
-  const totalNotes = NOTES.length * 3 // 3 octaves
-  const totalHeight = NOTE_HEIGHT * totalNotes
+  const totalHeight = NOTE_HEIGHT * TOTAL_NOTES
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -136,7 +138,7 @@ export const PianoRoll = ({
 
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
     // Draw horizontal grid lines
-    for (let i = 0; i <= totalNotes; i++) {
+    for (let i = 0; i <= TOTAL_NOTES; i++) {
       const y = i * NOTE_HEIGHT
       ctx.beginPath()
       ctx.strokeStyle = GRID_COLOR
@@ -167,8 +169,13 @@ export const PianoRoll = ({
 
       // Calculate position
       const y = (NOTES.length * (6 - octave) + noteIndex) * NOTE_HEIGHT
-      const x = (duration * beatWidth / 1000) // Convert ms to beats
-      const width = (duration / 500) * beatWidth // 500ms per beat
+      
+      // Calculate x position based on time (assuming 120 BPM, 500ms per beat)
+      const beatsFromStart = duration / 500 // Convert duration to beats
+      const x = beatsFromStart * beatWidth
+      
+      // Calculate width based on note duration
+      const width = beatWidth // One beat width
 
       // Draw note rectangle
       ctx.fillStyle = NOTE_COLOR
@@ -179,9 +186,11 @@ export const PianoRoll = ({
   return (
     <div 
       ref={containerRef} 
-      className="piano-roll-container relative w-full h-full overflow-hidden"
+      className="w-full h-full"
     >
-      <div className="relative w-full h-full overflow-auto">
+      <div 
+        className="relative w-full h-full overflow-auto"
+      >
         {/* Fixed piano keys */}
         <div 
           className="absolute top-0 left-0 z-10 bg-black/50 backdrop-blur-sm"
@@ -203,6 +212,7 @@ export const PianoRoll = ({
 
         {/* Scrollable grid and notes */}
         <div 
+          className="absolute top-0 left-0"
           style={{
             width: `${totalWidth}px`,
             height: `${totalHeight}px`,
