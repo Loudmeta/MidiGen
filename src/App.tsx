@@ -226,58 +226,60 @@ function App() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex gap-3 relative">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Describe the music you want to generate..."
-            className="
-              flex-1 
-              glass-container
-              px-6 
-              py-4
-              focus:outline-none 
-              focus:ring-2 
-              focus:ring-blue-500/50 
-              placeholder-text-secondary
-              pr-[100px]
-            "
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            className={`
-              absolute
-              right-2
-              top-1/2
-              -translate-y-1/2
-              bg-blue-500/90
-              hover:bg-blue-400/90 
-              rounded-full
-              p-3
-              transition-all
-              duration-200
-              shadow-glass
-              backdrop-blur-sm
-              border
-              border-blue-400/30
-              hover:scale-105
-              active:scale-95
-              disabled:opacity-50 
-              disabled:cursor-not-allowed
-              disabled:hover:scale-100
-              group
-            `}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader className="animate-spin" size={20} />
-            ) : (
-              <Send size={20} className="text-white group-hover:scale-110 transition-transform duration-200" />
-            )}
-          </button>
-        </form>
+        <div className="space-y-4 mb-6">
+          <form onSubmit={handleSubmit} className="flex gap-3 relative">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Describe the music you want to generate..."
+              className="
+                flex-1 
+                glass-container
+                px-6 
+                py-4
+                focus:outline-none 
+                focus:ring-2 
+                focus:ring-blue-500/50 
+                placeholder-text-secondary
+                pr-[100px]
+              "
+              disabled={isLoading}
+            />
+            <button
+              type="submit"
+              className={`
+                absolute
+                right-2
+                top-1/2
+                -translate-y-1/2
+                bg-blue-500/90
+                hover:bg-blue-400/90 
+                rounded-full
+                p-3
+                transition-all
+                duration-200
+                shadow-glass
+                backdrop-blur-sm
+                border
+                border-blue-400/30
+                hover:scale-105
+                active:scale-95
+                disabled:opacity-50 
+                disabled:cursor-not-allowed
+                disabled:hover:scale-100
+                group
+              `}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader className="animate-spin" size={20} />
+              ) : (
+                <Send size={20} className="text-white group-hover:scale-110 transition-transform duration-200" />
+              )}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   )
