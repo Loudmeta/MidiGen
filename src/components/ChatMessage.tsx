@@ -45,6 +45,13 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
       return (
         <ReactMarkdown 
           className="prose prose-invert max-w-none prose-pre:bg-surface/50 prose-pre:border prose-pre:border-border prose-p:leading-relaxed prose-p:text-text-primary prose-headings:text-text-primary"
+          components={{
+            pre: ({ node, ...props }) => (
+              <div className="code-block-container">
+                <pre {...props} />
+              </div>
+            ),
+          }}
         >
           {content}
         </ReactMarkdown>
@@ -86,6 +93,13 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
           <div className="mt-4 pt-4 border-t border-border">
             <ReactMarkdown 
               className="prose prose-invert max-w-none prose-pre:bg-surface/50 prose-pre:border prose-pre:border-border prose-p:leading-relaxed prose-p:text-text-primary prose-headings:text-text-primary"
+              components={{
+                pre: ({ node, ...props }) => (
+                  <div className="code-block-container">
+                    <pre {...props} />
+                  </div>
+                ),
+              }}
             >
               {content.response}
             </ReactMarkdown>

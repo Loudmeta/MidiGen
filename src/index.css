@@ -35,3 +35,64 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: theme('colors.surface.hover');
 }
+
+/* Custom scrollbar for chat sessions */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: theme('colors.border.DEFAULT');
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.border.hover');
+}
+
+/* Hide scrollbar when not hovering */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.custom-scrollbar:hover {
+  scrollbar-color: theme('colors.border.DEFAULT') transparent;
+}
+
+/* Code block styles */
+.code-block-container {
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: theme('colors.surface.DEFAULT');
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+.code-block-container pre {
+  margin: 0 !important;
+  padding: 12px !important;
+}
+
+/* Customize code block scrollbar */
+.code-block-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.code-block-container::-webkit-scrollbar-track {
+  background: theme('colors.surface.DEFAULT');
+  border-radius: 3px;
+}
+
+.code-block-container::-webkit-scrollbar-thumb {
+  background: theme('colors.border.DEFAULT');
+  border-radius: 3px;
+}
+
+.code-block-container::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.border.hover');
+}

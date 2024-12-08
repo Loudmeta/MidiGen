@@ -1,18 +1,96 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Send, Loader } from 'lucide-react'
 import { ChatMessage } from './components/ChatMessage'
 import { MidiPlayerComponent } from './components/MidiPlayer'
+import { Navigation } from './components/Navigation'
 import { callLLM } from './services/llmService'
 import { createMidiFile, parseLLMResponse } from './services/midiService'
 import { Message, NoteSequence, MessageContent } from './types'
 import { validateJSONResponse } from './utils/jsonValidation'
 import './index.css'
 
+interface ChatSession {
+  id: string;
+  title: string;
+  preview: string;
+  messages: Message[];
+  timestamp: number;
+}
+
 function App() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [midiData, setMidiData] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([])
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
+
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  useEffect(() => {
+    // Create a new session when the app starts
+    if (!currentSessionId) {
+      handleNewChat();
+    }
+  }, []);
+
+  const handleNewChat = () => {
+    const newSession: ChatSession = {
+      id: Date.now().toString(),
+      title: 'New Chat',
+      preview: '',
+      messages: [],
+      timestamp: Date.now(),
+    };
+    setChatSessions(prev => [newSession, ...prev]);
+    setCurrentSessionId(newSession.id);
+    setMessages([]);
+    setInput('');
+    setMidiData(null);
+  }
+
+  const handleClearChat = () => {
+    setMessages([]);
+    setInput('');
+    setMidiData(null);
+    // Update current session
+    if (currentSessionId) {
+      setChatSessions(prev =>
+        prev.map(session =>
+          session.id === currentSessionId
+            ? { ...session, messages: [], preview: '' }
+            : session
+        )
+      );
+    }
+  }
+
+  const handleSelectSession = (sessionId: string) => {
+    const session = chatSessions.find(s => s.id === sessionId);
+    if (session) {
+      setCurrentSessionId(sessionId);
+      setMessages(session.messages);
+      setMidiData(null); // Reset MIDI player for the new session
+    }
+  }
+
+  // Update session when messages change
+  useEffect(() => {
+    if (currentSessionId && messages.length > 0) {
+      setChatSessions(prev =>
+        prev.map(session =>
+          session.id === currentSessionId
+            ? {
+                ...session,
+                messages,
+                preview: messages[messages.length - 1].text.toString().slice(0, 50) + '...',
+                title: messages[0].text.toString().slice(0, 30) + '...'
+              }
+            : session
+        )
+      );
+    }
+  }, [messages, currentSessionId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,6 +127,7 @@ function App() {
       ])
 
       const response = await callLLM(input)
+      await sleep(1000) // Add 1 second delay
       messageContent.tasks[0].status = 'completed'
       setMessages(prev => [
         ...prev.slice(0, -1),
@@ -65,6 +144,7 @@ function App() {
       const musicData = parseLLMResponse(response)
       const midiDataUri = createMidiFile(musicData)
       setMidiData(midiDataUri)
+      await sleep(1000) // Add 1 second delay
 
       messageContent.tasks[1].status = 'completed'
       setMessages(prev => [
@@ -86,6 +166,7 @@ function App() {
         console.error('Validation error:', validationError)
       }
 
+      await sleep(1000) // Add 1 second delay
       messageContent.response = response
       messageContent.tasks[2].status = 'completed'
       
@@ -112,7 +193,14 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background text-text-primary p-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto relative">
+        <Navigation 
+          onNewChat={handleNewChat} 
+          onClearChat={handleClearChat} 
+          chatSessions={chatSessions}
+          onSelectSession={handleSelectSession}
+          currentSessionId={currentSessionId}
+        />
         <h1 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
           MidiGen Chat
         </h1>
