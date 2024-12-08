@@ -1,83 +1,112 @@
-# MidiGen - AI-Powered MIDI Music Generator
+# MidiGen
 
-MidiGen is an interactive web application that generates musical melodies using AI. It provides a chat interface where users can describe the type of music they want, and the application generates MIDI compositions following specific musical rules and structure.
+An AI-powered MIDI music generator built with React, TypeScript, and OpenRouter AI. Create unique musical compositions through natural language descriptions.
 
 ## Features
 
-- 🎵 AI-powered melody generation
-- 💬 Interactive chat interface
+- 🎵 Generate MIDI music from text descriptions
 - 🎹 Real-time MIDI playback
-- ⬇️ MIDI file download capability
-- 🎼 Three-layer musical composition:
-  - Melody line (octave 6)
-  - Chord progression (octave 5)
-  - Bass line (octave 4)
-
-## Technical Stack
-
-- **Frontend**: React + TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **MIDI Processing**: midi-player-js
-- **AI Integration**: OpenRouter API
-
-## Musical Structure
-
-Each generated composition follows these rules:
-- 8 bars of music
-- 2 beats = 1 second (1000ms)
-- 4 beats = 1 bar (2000ms)
-- Total composition length = 8 bars (8000ms)
+- 💾 Download generated MIDI files
+- 🎨 Beautiful glass-morphism UI design
+- 📱 Responsive layout
+- 💬 Chat-based interface
+- 📚 Chat history management
+- 🔄 Multiple chat sessions support
 
 ## Getting Started
 
+### Prerequisites
+
+- Node.js (v16 or higher)
+- npm or yarn
+- OpenRouter API key
+
+### Installation
+
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/midigen.git
-cd midigen
+git clone https://github.com/yourusername/MidiGen.git
+cd MidiGen
 ```
 
 2. Install dependencies:
 ```bash
 npm install
+# or
+yarn install
 ```
 
-3. Create a `.env` file with the following variables:
-```
+3. Create a `.env` file in the root directory and add your OpenRouter API key:
+```env
 VITE_OPENROUTER_API_KEY=your_api_key_here
-VITE_SITE_URL=your_site_url
-VITE_SITE_NAME=MidiGen
+VITE_SITE_URL=your_site_url # Optional, defaults to window.location.origin
+VITE_SITE_NAME=MidiGen # Optional, defaults to 'MidiGen'
 ```
 
 4. Start the development server:
 ```bash
 npm run dev
+# or
+yarn dev
 ```
 
 ## Usage
 
-1. Open the application in your browser
-2. Type a description of the music you want to generate (e.g., "Create a happy jazz melody")
-3. Wait for the AI to generate your composition
-4. Use the player controls to play/pause the melody
-5. Download the MIDI file if desired
+1. Enter a description of the music you want to generate (e.g., "Create a happy jazz melody")
+2. Wait for the AI to generate your composition
+3. Use the player controls to play/pause the melody
+4. Download the MIDI file if desired
+5. Create new chat sessions or browse previous ones using the history feature
+
+## Features in Detail
+
+### Music Generation
+- Three-part musical composition:
+  - Melody line (octave 6)
+  - Chord progression (octave 5)
+  - Bass line (octave 4)
+- 8-bar compositions with precise musical timing
+- Velocity control for dynamic expression
+
+### User Interface
+- Glass-morphism design with smooth animations
+- Chat-based interaction
+- Real-time progress indicators
+- MIDI playback controls
+- Session management with history view
+- Responsive and accessible design
+
+### Chat Sessions
+- Multiple chat session support
+- Session history with previews
+- Easy navigation between sessions
+- Session management (new, clear, switch)
 
 ## Project Structure
 
 ```
 src/
-├── components/        # React components
-├── services/         # API and MIDI services
-├── types/           # TypeScript type definitions
-├── utils/           # Utility functions
-└── App.tsx          # Main application component
+├── components/          # React components
+│   ├── ChatMessage     # Message display component
+│   ├── MidiPlayer      # MIDI playback controls
+│   ├── Navigation      # App navigation and history
+│   └── JSONDisplay     # JSON data visualization
+├── services/           # Core services
+│   ├── llmService      # AI interaction handling
+│   └── midiService     # MIDI file generation
+├── types/             # TypeScript definitions
+├── utils/             # Utility functions
+└── App.tsx            # Main application component
 ```
 
-## Environment Variables
+## Technical Details
 
-- `VITE_OPENROUTER_API_KEY`: Your OpenRouter API key
-- `VITE_SITE_URL`: Your site URL (defaults to window.location.origin)
-- `VITE_SITE_NAME`: Your site name (defaults to 'MidiGen')
+- Built with React and TypeScript
+- Uses Vite for fast development and building
+- Tailwind CSS for styling
+- OpenRouter AI for music generation
+- Web MIDI API for playback
+- Local storage for session persistence
 
 ## Contributing
 
@@ -95,7 +124,15 @@ src/
 - Social sharing features
 - Expanded musical style options
 - Comprehensive test coverage
+- Mobile responsiveness improvements
+- Advanced session management features
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- OpenRouter AI for providing the AI capabilities
+- React and TypeScript communities
+- Contributors and users of the project
