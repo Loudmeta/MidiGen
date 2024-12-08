@@ -3,7 +3,7 @@ import { Send, Loader } from 'lucide-react'
 import { ChatMessage } from './components/ChatMessage'
 import { MidiPlayerComponent } from './components/MidiPlayer'
 import { callLLM } from './services/llmService'
-import { Message, NoteSequence } from './types'
+import { Message, NoteSequence, MessageContent } from './types'
 import { validateJSONResponse } from './utils/jsonValidation'
 import './index.css'
 
@@ -32,14 +32,44 @@ function App() {
         console.error('Validation error:', validationError)
       }
 
+      const initialMessageContent: MessageContent = {
+        title: "Generating Your MIDI",
+        tasks: [
+          { id: '1', description: 'Analyzing musical prompt', status: 'pending' },
+          { id: '2', description: 'Determining musical parameters', status: 'pending' },
+          { id: '3', description: 'Generating melody pattern', status: 'pending' },
+          { id: '4', description: 'Creating harmony structure', status: 'pending' },
+          { id: '5', description: 'Setting rhythm and tempo', status: 'pending' },
+          { id: '6', description: 'Applying musical dynamics', status: 'pending' },
+          { id: '7', description: 'Converting to MIDI format', status: 'pending' },
+          { id: '8', description: 'Preparing playback', status: 'pending' }
+        ],
+        response: response
+      }
+
       const botMessage: Message = {
-        text: response,
+        text: initialMessageContent,
         isUser: false,
         noteSequence
       }
       setMessages(prev => [...prev, botMessage])
       
-      // Mock MIDI data (replace with actual MIDI generation)
+      // Simulate progressive task completion
+      const taskUpdateInterval = 1000 // 1 second between updates
+      const messageContent = { ...initialMessageContent }
+      
+      for (let i = 0; i < messageContent.tasks.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, taskUpdateInterval))
+        messageContent.tasks[i].status = 'completed'
+        setMessages(prev => [
+          ...prev.slice(0, -1),
+          {
+            ...prev[prev.length - 1],
+            text: { ...messageContent }
+          }
+        ])
+      }
+
       if (noteSequence) {
         setMidiData('data:audio/midi;base64,YOUR_MIDI_DATA_HERE')
       }
@@ -56,13 +86,13 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-background text-text-primary p-4">
+      <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
           MidiGen Chat
         </h1>
         
-        <div className="bg-gray-800/80 backdrop-blur-sm rounded-[24px] p-6 mb-6 h-[60vh] overflow-y-auto flex flex-col gap-4 border border-gray-700/50 shadow-lg">
+        <div className="glass-container mb-6 h-[60vh] overflow-y-auto flex flex-col gap-4 p-6">
           {messages.map((message, index) => (
             <ChatMessage 
               key={index} 
@@ -91,19 +121,14 @@ function App() {
             placeholder="Describe the music you want to generate..."
             className="
               flex-1 
-              bg-gray-800/80 
-              backdrop-blur-sm 
-              rounded-[20px]
+              glass-container
               px-6 
               py-4
               focus:outline-none 
               focus:ring-2 
               focus:ring-blue-500/50 
-              border 
-              border-gray-700/50 
-              placeholder-gray-400
+              placeholder-text-secondary
               pr-[100px]
-              text-gray-100
             "
             disabled={isLoading}
           />
@@ -115,13 +140,12 @@ function App() {
               top-1/2
               -translate-y-1/2
               bg-blue-500/90
-              hover:bg-blue-400 
+              hover:bg-blue-400/90 
               rounded-full
               p-3
               transition-all
               duration-200
-              shadow-md
-              hover:shadow-lg
+              shadow-glass
               backdrop-blur-sm
               border
               border-blue-400/30

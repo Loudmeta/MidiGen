@@ -75,7 +75,7 @@ The melody should be about:`;
 
   try {
     const requestBody = {
-      "model": "meta-llama/llama-3.2-90b-vision-instruct:free",
+      "model": "meta-llama/llama-3.1-70b-instruct:free",
       "messages": [
         {
           "role": "system",
