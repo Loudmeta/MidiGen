@@ -30,10 +30,11 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
 
   const renderTaskStatus = (status: Task['status']) => {
     switch (status) {
-      case 'loading':
+      case 'in-progress':
         return <Loader size={16} className="text-blue-400 animate-spin" />
       case 'completed':
         return <Check size={16} className="text-green-400" />
+      case 'pending':
       default:
         return <div className="w-4 h-4 rounded-full border-2 border-gray-500" />
     }
@@ -58,7 +59,7 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
         
         <div className="space-y-2 bg-surface/30 rounded-lg p-4">
           <div className="text-sm font-medium text-text-secondary mb-3">Generation Steps:</div>
-          {content.tasks.map((task: Task, index: number) => (
+          {content.tasks.map((task: Task) => (
             <div 
               key={task.id} 
               className="flex items-center gap-2 transition-all duration-300"
@@ -70,20 +71,26 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
               <div className="flex-shrink-0">
                 {renderTaskStatus(task.status)}
               </div>
-              <span className="text-text-primary text-sm">
+              <span className={`text-sm ${
+                task.status === 'in-progress' ? 'text-blue-400' :
+                task.status === 'completed' ? 'text-green-400' :
+                'text-text-primary'
+              }`}>
                 {task.description}
               </span>
             </div>
           ))}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-border">
-          <ReactMarkdown 
-            className="prose prose-invert max-w-none prose-pre:bg-surface/50 prose-pre:border prose-pre:border-border prose-p:leading-relaxed prose-p:text-text-primary prose-headings:text-text-primary"
-          >
-            {content.response}
-          </ReactMarkdown>
-        </div>
+        {content.response && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <ReactMarkdown 
+              className="prose prose-invert max-w-none prose-pre:bg-surface/50 prose-pre:border prose-pre:border-border prose-p:leading-relaxed prose-p:text-text-primary prose-headings:text-text-primary"
+            >
+              {content.response}
+            </ReactMarkdown>
+          </div>
+        )}
       </div>
     )
   }
@@ -93,7 +100,7 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
     ? 'bg-blue-600/90 backdrop-blur-sm text-white ml-auto border-blue-500/30' 
     : 'glass-container text-text-primary mr-auto border-border'
 
-  const downloadButton = role === 'assistant' && (
+  const downloadButton = role === 'assistant' && typeof content !== 'string' && content.response && (
     <button
       onClick={handleDownload}
       className="absolute bottom-0 right-0 translate-y-1/2 translate-x-1/2 p-2.5 rounded-full bg-blue-500/90 hover:bg-blue-400/90 shadow-glass backdrop-blur-sm transition-all duration-200 border border-blue-400/30 group hover:scale-105 active:scale-95 z-10"

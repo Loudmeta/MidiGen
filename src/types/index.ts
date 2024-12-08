@@ -15,7 +15,7 @@ export interface NoteSequence {
 export interface Task {
   id: string;
   description: string;
-  status: 'pending' | 'loading' | 'completed';
+  status: 'pending' | 'in-progress' | 'completed';
 }
 
 export interface MessageContent {

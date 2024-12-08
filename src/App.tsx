@@ -3,6 +3,7 @@ import { Send, Loader } from 'lucide-react'
 import { ChatMessage } from './components/ChatMessage'
 import { MidiPlayerComponent } from './components/MidiPlayer'
 import { callLLM } from './services/llmService'
+import { createMidiFile, parseLLMResponse } from './services/midiService'
 import { Message, NoteSequence, MessageContent } from './types'
 import { validateJSONResponse } from './utils/jsonValidation'
 import './index.css'
@@ -23,8 +24,61 @@ function App() {
     setIsLoading(true)
 
     try {
+      const initialMessageContent: MessageContent = {
+        title: "Creating Your Music",
+        tasks: [
+          { id: '1', description: 'Generating Musical Notes', status: 'pending' },
+          { id: '2', description: 'Creating MIDI File', status: 'pending' },
+          { id: '3', description: 'Preparing Response', status: 'pending' }
+        ],
+        response: ''
+      }
+
+      const botMessage: Message = {
+        text: initialMessageContent,
+        isUser: false
+      }
+      setMessages(prev => [...prev, botMessage])
+
+      // Task 1: Generating Musical Notes
+      const messageContent = { ...initialMessageContent }
+      messageContent.tasks[0].status = 'in-progress'
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { ...prev[prev.length - 1], text: { ...messageContent } }
+      ])
+
       const response = await callLLM(input)
-      
+      messageContent.tasks[0].status = 'completed'
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { ...prev[prev.length - 1], text: { ...messageContent } }
+      ])
+
+      // Task 2: Creating MIDI File
+      messageContent.tasks[1].status = 'in-progress'
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { ...prev[prev.length - 1], text: { ...messageContent } }
+      ])
+
+      const musicData = parseLLMResponse(response)
+      const midiDataUri = createMidiFile(musicData)
+      setMidiData(midiDataUri)
+
+      messageContent.tasks[1].status = 'completed'
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { ...prev[prev.length - 1], text: { ...messageContent } }
+      ])
+
+      // Task 3: Preparing Response
+      messageContent.tasks[2].status = 'in-progress'
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { ...prev[prev.length - 1], text: { ...messageContent } }
+      ])
+
       let noteSequence: NoteSequence | undefined
       try {
         noteSequence = validateJSONResponse(response)
@@ -32,47 +86,18 @@ function App() {
         console.error('Validation error:', validationError)
       }
 
-      const initialMessageContent: MessageContent = {
-        title: "Generating Your MIDI",
-        tasks: [
-          { id: '1', description: 'Analyzing musical prompt', status: 'pending' },
-          { id: '2', description: 'Determining musical parameters', status: 'pending' },
-          { id: '3', description: 'Generating melody pattern', status: 'pending' },
-          { id: '4', description: 'Creating harmony structure', status: 'pending' },
-          { id: '5', description: 'Setting rhythm and tempo', status: 'pending' },
-          { id: '6', description: 'Applying musical dynamics', status: 'pending' },
-          { id: '7', description: 'Converting to MIDI format', status: 'pending' },
-          { id: '8', description: 'Preparing playback', status: 'pending' }
-        ],
-        response: response
-      }
-
-      const botMessage: Message = {
-        text: initialMessageContent,
-        isUser: false,
-        noteSequence
-      }
-      setMessages(prev => [...prev, botMessage])
+      messageContent.response = response
+      messageContent.tasks[2].status = 'completed'
       
-      // Simulate progressive task completion
-      const taskUpdateInterval = 1000 // 1 second between updates
-      const messageContent = { ...initialMessageContent }
-      
-      for (let i = 0; i < messageContent.tasks.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, taskUpdateInterval))
-        messageContent.tasks[i].status = 'completed'
-        setMessages(prev => [
-          ...prev.slice(0, -1),
-          {
-            ...prev[prev.length - 1],
-            text: { ...messageContent }
-          }
-        ])
-      }
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        {
+          ...prev[prev.length - 1],
+          text: { ...messageContent },
+          noteSequence
+        }
+      ])
 
-      if (noteSequence) {
-        setMidiData('data:audio/midi;base64,YOUR_MIDI_DATA_HERE')
-      }
     } catch (error) {
       console.error('Error:', error)
       const errorMessage: Message = {
