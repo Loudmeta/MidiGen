@@ -55,7 +55,7 @@ export const MidiPlayerComponent = ({ midiData }: MidiPlayerComponentProps) => {
   const handleDownload = () => {
     const link = document.createElement('a')
     link.href = midiData
-    link.download = 'generated-music.mid'
+    link.download = 'midigen-melody.mid'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
